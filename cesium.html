@@ -56,15 +56,43 @@
 		viewer.scene.globe.enableLighting = true;
 		
 		//世界地形图
-		//*
+		/*
 		var terrain = new Cesium.createWorldTerrain({           
 			requestWaterMask:true,           
 			requestVertexNormals:true    //requestVertexNormals设为true并开启全球光照。   
 		}); 
-		//*/
+		*/
 		//按照程序创建椭球的表面。缺乏地形的真实外观，但不从服务器请求数据
-		var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();    
-		viewer.terrainProvider = terrain;//ellipsoidProvider terrain
+		//var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();    
+		//viewer.terrainProvider = terrain;//ellipsoidProvider terrain
+
+		//Cesium动态叠加地形图 
+		MapConfig.terrainObj = {url:"//assets.agi.com/stk-terrain/world",requestWaterMask:false,requestVertexNormals:false,proxyUrl:""}; 
+		//MapConfig.terrainObj = {url:"http://localhost:8180/cesium/worldTerrain",requestWaterMask:false,requestVertexNormals:false,proxyUrl:""};  
+		
+		/** 
+			 * 添加地形图图层 
+			 * @method addTerrainLayer 
+			 * @param  url 地形图url proxyUrl 代理请求url 
+			 * @return 
+			 */ 
+		var addTerrainLayer = function (terrainObj) { 
+			if (terrainObj.url && terrainObj.url.replace(/(^s*)|(s*$)/g, "").length >0) { 
+				var provider ={}; 
+				if(terrainObj.proxyUrl && terrainObj.proxyUrl.length>0) 
+					provider = {
+						proxy:new Cesium.DefaultProxy(terrainObj.proxyUrl),
+						url:terrainObj.url,
+						requestWaterMask:terrainObj.requestWaterMask,
+						requestVertexNormals:terrainObj.requestVertexNormals
+					}; 
+				else 
+								provider = {url:terrainObj.url,requestWaterMask:terrainObj.requestWaterMask,requestVertexNormals:terrainObj.requestVertexNormals}; 
+				
+				var terrainProvider = new Cesium.CesiumTerrainProvider(provider); 
+						this.cesiumViewer.terrainProvider = terrainProvider; 
+			} 
+		};
 
 		viewer.scene.debugShowFramesPerSecond = true;
 		//点击home按钮跳转到自定义位置
