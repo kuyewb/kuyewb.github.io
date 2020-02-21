@@ -4,141 +4,173 @@
 		<meta charset="UTF-8">
 		<title>Cesium加载各种地图服务</title>
 		
-		<link rel="stylesheet" href="../Build/Cesium/Widgets/widgets.css" />
-		<script src="../Build/Cesium/Cesium.js"></script>
+		<link rel="stylesheet" href="script/Cesium/Widgets/widgets.css" />
+		<script src="script/Cesium/Cesium.js"></script>
+		<style>
+			html,body{
+				width:100%;
+				height:100%;
+				margin:0px;
+			}
+		</style>
 	</head>
 	<body>
-		<div  id="cesiumContainer" style="width: 100%;height: 900px;background-color: rosybrown;"></div>
+		<div  id="cesiumContainer" style="width: 100%;height: 100%;background-color: rosybrown;"></div>
 	</body>
 	<script>
         //Cesium.Ion.defaultAccessToken = '你的token'
-		var url='http://localhost:8080/geoserver/wms'; //Geoserver URL   
-	   	var viewer = new Cesium.Viewer('cesiumContainer',{ 
-	   		//需要进行可视化的数据源的集合
-           animation: false, //是否显示动画控件
-            shouldAnimate : true,
-            homeButton: false, //是否显示Home按钮
-            fullscreenButton: false, //是否显示全屏按钮
-            baseLayerPicker: false, //是否显示图层选择控件
-            geocoder: false, //是否显示地名查找控件
-            timeline: false, //是否显示时间线控件
-            sceneModePicker: true, //是否显示投影方式控件
-            navigationHelpButton: false, //是否显示帮助信息控件
-            infoBox: false, //是否显示点击要素之后显示的信息
-            requestRenderMode: true, //启用请求渲染模式
-            scene3DOnly: false, //每个几何实例将只能以3D渲染以节省GPU内存
-            sceneMode: 3, //初始场景模式 1 2D模式 2 2D循环模式 3 3D模式  Cesium.SceneMode
-            fullscreenElement: document.body, //全屏时渲染的HTML元素 暂时没发现用处
-		    imageryProvider:new Cesium.WebMapServiceImageryProvider({   
-		        url : url,         
-		        layers: 'nurc:Arc_Sample'// Here just give layer name   
-		    })
+		 //谷歌服务地址：https://blog.csdn.net/gisuuser/article/details/83089467
+		//http://www.google.cn/maps/vt?lyrs=y@189&gl=cn&x={x}&y={y}&z={z}//卫星图加注记
+		//http://www.google.cn/maps/vt?lyrs=s@800&x={x}&y={y}&z={z}   影像
+		//谷歌影像
+				var guge=new Cesium.UrlTemplateImageryProvider({            	
+					url:'http://www.google.cn/maps/vt?lyrs=y@189&gl=cn&x={x}&y={y}&z={z}',  
+					tilingScheme:new Cesium.WebMercatorTilingScheme(),            	
+					minimumLevel:1,            
+					maximumLevel:20        
+				});  
+				//scene.skyAtmosphere.show false;//大气层
+		//viewer.scene.globe.depthTestAgainstTerrain = true;//控制视角不转到地下
+	   	var viewer = new Cesium.Viewer('cesiumContainer',{
+				animation:false,//左下角控制动画
+				baseLayerPicker:false,//右上角图层选择器
+				fullscreenButton:false,    
+				geocoder:false,//右上角搜索   默认bing地图
+				homeButton:true,      
+				infoBox:false,   
+				scene3DOnly:false,//仅仅显示3d,可隐藏右上角2d和3d按钮  哥伦布视图（CV）
+				sceneModePicker:false,
+				creditContaniner:"credit",
+				vrButton:false,
+				//skyBox:new Cesium.SkyBox(),
+				selectionoIndicatr:false,            
+				timeline:false,//最下面时间轴            
+				navigationHelpButton:false,//右上角帮助按钮 
+				navigationInstructionsInitiallyVisibl:false,            
+				useDefaultRenderLoop:true,            
+				showRenderLoopErrors:true,            
+				projectionPicker:false,//投影选择器    
+				//selectionIndicator:false,//禁止entity选中
+				imageryProvider : guge     
 		});
-		var layers = viewer.imageryLayers;  
-		/**
-		 * 加载本地离线高德地图
-		 * gaodeTitle为加载的tomcat下面的相对路径
-		 */
-		layers.addImageryProvider(createGaodeTileMapServiceImageryProvider());
-		function createGaodeTileMapServiceImageryProvider(){
-			var gaodeLayer = new Cesium.createTileMapServiceImageryProvider({  
-		     url : 'http://localhost:8087/gaodeTitle',
-		     credit:"gaodeTitle"
-			}); 
-			return gaodeLayer;
-		}
+		viewer.scene.globe.enableLighting = true;
 		
-		/**
-		* 叠合arcgis的离线动态服务
-		* @param url ()
-		*/
-		//layers.addImageryProvider(createArcGisImageryProvider());
-		function createArcGisImageryProvider(){
-			var url="http://localhost:6080/arcgis/rest/services/world/MapServer";
-			var slgylayer =  new Cesium.ArcGisMapServerImageryProvider({  
-			   url : url
-			}); 
-			slgylayer.alpha = 0.1; //透明度
-			//设置图层的亮度  
-			slgylayer.brightness = 2.0;  //设置亮度
-			return slgylayer;
-		}
-		
-		/**
-		 * 加载天地图在线地图
-		 */
-		//layers.addImageryProvider(createTdtiImageryProvider());
-		function createTdtiImageryProvider(){
-			 viewer.imageryLayers.addImageryProvider(
-			      new Cesium.WebMapTileServiceImageryProvider({
-			          url: 'http://t0.tianditu.gov.cn/img_w/wmts?tk=ebf64362215c081f8317203220f133eb',
-			          layer:'img',
-			          style:'default',
-			          tileMatrixSetID:'w',
-			          format:'tiles',
-			          maximumLevel: 18
-			      }));
-		}
-		
-		/**
-		 * 加载arcgis在线地图
-		 */
-		//layers.addImageryProvider(createEsriImageryProvider());
-		function createEsriImageryProvider(){
-			var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-			   url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
-			});
-			return esriImageryProvider;
-		}
-	 //引入高德地图,
-	     viewer.imageryLayers.addImageryProvider(
-	       new Cesium.UrlTemplateImageryProvider({
-	        url: "https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
-	       }));
-	//加载腾讯地图
-	      viewer.imageryLayers.addImageryProvider(
-	        new Cesium.UrlTemplateImageryProvider({
-	        url : 'https://p2.map.gtimg.com/sateTiles/{z}/{sx}/{sy}/{x}_{reverseY}.jpg?version=229',
-	        customTags : {
-	          sx: function(imageryProvider, x, y, level) {
-	            return x>>4;
-	          },
-	          sy:function(imageryProvider, x, y, level) {
-	            return ((1<<level)-y)>>4;
-	          }
-	        }
-	      }));
+		//世界地形图
+		//*
+		var terrain = new Cesium.createWorldTerrain({           
+			requestWaterMask:true,           
+			requestVertexNormals:true    //requestVertexNormals设为true并开启全球光照。   
+		}); 
+		//*/
+		//按照程序创建椭球的表面。缺乏地形的真实外观，但不从服务器请求数据
+		var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();    
+		viewer.terrainProvider = terrain;//ellipsoidProvider terrain
 
-  //引入天地图标注,
-      viewer.imageryLayers.addImageryProvider(
-        new Cesium.WebMapTileServiceImageryProvider({
-          url: "https://t0.tianditu.gov.cn/cva_w/wmts?tk=c4e3a9d54b4a79e885fff9da0fca712a&service=wmts&request=GetTile&version=1.0.0&LAYER=cva&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
-          layer: "tdtAnnoLayer",
-          style: "default",
-          format: "image/jpeg",
-          tileMatrixSetID: "GoogleMapsCompatible",
-          show: false
-        })
-      );
-//引入谷歌地图,
-    viewer.imageryLayers.addImageryProvider(
-      new Cesium.UrlTemplateImageryProvider({
-        url: "https://mt1.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}&s=Gali"
-      }));
-		
-		/**
-		 * 加载cesium黑色炫酷地图（地图资源问题未成功）
-		 */
-		//layers.addImageryProvider(createCesiumLayer());
-		function createCesiumLayer(){
-			var balckMarble = new Cesium.createTileMapServiceImageryProvider({
-			    url : 'https://cesiumjs.org/blackmarble',
-			    credit : 'Black Marble imagery courtesy NASA Earth Observatory',
-			    flipXY : true
-			});
-			balckMarble.splitDirection = Cesium.ImagerySplitDirection.LEFT;
-			return balckMarble;
-		}
-		
+		viewer.scene.debugShowFramesPerSecond = true;
+		//点击home按钮跳转到自定义位置
+		/*viewer.homeButton.viewModel.command.beforeExecute.addEventListener(function(commandInfo){
+			//Fly to custom position
+			viewer.camera.flyToBoundingSphere(boundingSphere);
+			//Tell the home button not to do anything
+			commandInfo.cancel = ture;
+		});*/
+
+		//添加Entity box
+		/*var entity1 = viewer.entities.add({
+			name : "我的实体1",
+			position : Cesium.Cartesian3.fromDegrees(116,27,30000.0),
+			box : {
+				dimensions : Cesium.Cartesian3.fromDegrees(116,27,40000.0),//new Cesium.Cartesian3()
+				material : Cesium.Color.RED.withAlpha(0.5),
+				outline : true,
+				outlineColor : Cesium.Color.BLACK
+			}
+		});
+		viewer.zoomTo(viewer.entities);*/
+
+		//添加CZML实体
+		//var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
+		//viewer.dadtaSources.add(dataSourcePromise);
+		//viewer.zoomTo(dataSourcePromise);
+
+		//添加polyline
+		/*var entity = viewer.entities.add({
+			polyline : {
+				positions : Cesium.Cartesian3.fromDegreesArray([111,28,113,28]),
+				width : 5,
+				//material : Cesium.Color.RED
+				material : new Cesium.PolylineGlowMaterialProperty(
+					{
+						glowPower:0.2,
+						color: Cesium.Color.BLUE
+					}
+				)
+			}
+		});*/
+
+		//添加wall
+		/*
+		var getColorRamp = function(elevationRamp){
+			var ramp = document.createElement('canvas');
+			ramp.width = 1;
+			ramp.height = 100;
+			var ctx = ramp.getContext('2d');
+
+			var values = elevationRamp;
+			var grd = ctx.createLinearGradient(0,0,0,100);
+			grd.addColorStop(values[0],'#000000');//black
+			grd.addColorStop(values[1],'#2747E0');//blue
+			grd.addColorStop(values[2],'#D33B7D');//pink
+			grd.addColorStop(values[3],'#D33038');//red
+			ctx.fillStyle = grd;
+			ctx.fillRect(0,0,1,100);
+			return ramp;
+		};
+
+		var redwall = viewer.entities.add({
+			name : "Red wall at height",
+			wall : {
+				positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+					113.44444,28.2222222,2000.0,
+					113.5555,28.2222222,2000.0,
+					113.66666,28.333333,2000.0,
+					113.777777777,28.333333,2000.0,
+				]),
+				miniumHeights : [3000,2000,2000,3000],
+				material: getColorRamp([0.0,0.045,0.1,0.15],true)
+			}
+		});*/
+
+		//贴地线
+		/*
+		var rectanglePrimitive = viewer.scene.primitives.add(
+			new Cesium.GroundPrimitive({
+				geometryInstances: new Cesium.GeometryInstance({
+					geometry: new Cesium.CorridorGeometry({
+						vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
+						positions:Cesium.Cartesian3.fromDegreesArray([
+							108,23,112.82742,23.0675,112.82888,23.0646,112.8307,23.0609,112.8,23.05
+						]),
+						width:40
+					}),
+					attributes:{
+						color:Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0,1.0,0.0,0.5))
+					}
+				}),
+				classificationType : Cesium.ClassificationType.TERRATIN
+			})
+		);*/
+
+		//设置camera roll绕x轴旋转 pitch 绕y轴旋转 heading 绕z轴旋转
+		viewer.camera.setView({
+			destination: Cesium.Cartesian3.fromDegrees(112,28,2000),
+			orientation : {
+				heading : Cesium.Math.toRadians(20.0),//方向
+				pitch:Cesium.Math.toRadians(-90.0),//倾斜角度
+				roll:0
+			}
+		});
+
+		//viewer.zoomTo(viewer.entities);
 	</script>
 </html>

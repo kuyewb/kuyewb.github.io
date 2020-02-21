@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Cesium加载各种地图服务</title>
+		
+		<link rel="stylesheet" href="script/Cesium/Widgets/widgets.css" />
+		<script src="script/Cesium/Cesium.js"></script>
+	</head>
+	<body>
+		<div  id="cesiumContainer" style="width: 100%;height: 900px;background-color: rosybrown;"></div>
+	</body>
+	<script>
+        //Cesium.Ion.defaultAccessToken = '你的token'
+		var url='http://localhost:8080/geoserver/wms'; //Geoserver URL   
+	   	var viewer = new Cesium.Viewer('cesiumContainer',{ 
+	   		//需要进行可视化的数据源的集合
+           animation: false, //是否显示动画控件
+            shouldAnimate : true,
+            homeButton: false, //是否显示Home按钮
+            fullscreenButton: false, //是否显示全屏按钮
+            baseLayerPicker: false, //是否显示图层选择控件
+            geocoder: false, //是否显示地名查找控件
+            timeline: false, //是否显示时间线控件
+            sceneModePicker: true, //是否显示投影方式控件
+            navigationHelpButton: false, //是否显示帮助信息控件
+            infoBox: false, //是否显示点击要素之后显示的信息
+            requestRenderMode: true, //启用请求渲染模式
+            scene3DOnly: false, //每个几何实例将只能以3D渲染以节省GPU内存
+            sceneMode: 3, //初始场景模式 1 2D模式 2 2D循环模式 3 3D模式  Cesium.SceneMode
+            fullscreenElement: document.body, //全屏时渲染的HTML元素 暂时没发现用处
+		    imageryProvider:new Cesium.WebMapServiceImageryProvider({   
+		        url : url,         
+		        layers: 'nurc:Arc_Sample'// Here just give layer name   
+		    })
+		});
+		var layers = viewer.imageryLayers;  
+		/**
+		 * 加载本地离线高德地图
+		 * gaodeTitle为加载的tomcat下面的相对路径
+		 */
+		layers.addImageryProvider(createGaodeTileMapServiceImageryProvider());
+		function createGaodeTileMapServiceImageryProvider(){
+			var gaodeLayer = new Cesium.createTileMapServiceImageryProvider({  
+		     url : 'http://localhost:8087/gaodeTitle',
+		     credit:"gaodeTitle"
+			}); 
+			return gaodeLayer;
+		}
+		
+		/**
+		* 叠合arcgis的离线动态服务
+		* @param url ()
+		*/
+		//layers.addImageryProvider(createArcGisImageryProvider());
+		function createArcGisImageryProvider(){
+			var url="http://localhost:6080/arcgis/rest/services/world/MapServer";
+			var slgylayer =  new Cesium.ArcGisMapServerImageryProvider({  
+			   url : url
+			}); 
+			slgylayer.alpha = 0.1; //透明度
+			//设置图层的亮度  
+			slgylayer.brightness = 2.0;  //设置亮度
+			return slgylayer;
+		}
+		
+		/**
+		 * 加载天地图在线地图
+		 */
+		//layers.addImageryProvider(createTdtiImageryProvider());
+		function createTdtiImageryProvider(){
+			 viewer.imageryLayers.addImageryProvider(
+			      new Cesium.WebMapTileServiceImageryProvider({
+			          url: 'http://t0.tianditu.gov.cn/img_w/wmts?tk=ebf64362215c081f8317203220f133eb',
+			          layer:'img',
+			          style:'default',
+			          tileMatrixSetID:'w',
+			          format:'tiles',
+			          maximumLevel: 18
+			      }));
+		}
+		
+		/**
+		 * 加载arcgis在线地图
+		 */
+		//layers.addImageryProvider(createEsriImageryProvider());
+		function createEsriImageryProvider(){
+			var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+			   url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+			});
+			return esriImageryProvider;
+		}
+	 //引入高德地图,
+	     viewer.imageryLayers.addImageryProvider(
+	       new Cesium.UrlTemplateImageryProvider({
+	        url: "https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
+	       }));
+	//加载腾讯地图
+	      viewer.imageryLayers.addImageryProvider(
+	        new Cesium.UrlTemplateImageryProvider({
+	        url : 'https://p2.map.gtimg.com/sateTiles/{z}/{sx}/{sy}/{x}_{reverseY}.jpg?version=229',
+	        customTags : {
+	          sx: function(imageryProvider, x, y, level) {
+	            return x>>4;
+	          },
+	          sy:function(imageryProvider, x, y, level) {
+	            return ((1<<level)-y)>>4;
+	          }
+	        }
+	      }));
+
+  //引入天地图标注,
+      viewer.imageryLayers.addImageryProvider(
+        new Cesium.WebMapTileServiceImageryProvider({
+          url: "https://t0.tianditu.gov.cn/cva_w/wmts?tk=c4e3a9d54b4a79e885fff9da0fca712a&service=wmts&request=GetTile&version=1.0.0&LAYER=cva&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles",
+          layer: "tdtAnnoLayer",
+          style: "default",
+          format: "image/jpeg",
+          tileMatrixSetID: "GoogleMapsCompatible",
+          show: false
+        })
+      );
+//引入谷歌地图,
+    viewer.imageryLayers.addImageryProvider(
+      new Cesium.UrlTemplateImageryProvider({
+        url: "https://mt1.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}&s=Gali"
+      }));
+		
+		/**
+		 * 加载cesium黑色炫酷地图（地图资源问题未成功）
+		 */
+		//layers.addImageryProvider(createCesiumLayer());
+		function createCesiumLayer(){
+			var balckMarble = new Cesium.createTileMapServiceImageryProvider({
+			    url : 'https://cesiumjs.org/blackmarble',
+			    credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+			    flipXY : true
+			});
+			balckMarble.splitDirection = Cesium.ImagerySplitDirection.LEFT;
+			return balckMarble;
+		}
+		
+	</script>
+</html>
