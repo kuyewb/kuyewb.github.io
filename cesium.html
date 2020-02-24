@@ -4,201 +4,84 @@
 		<meta charset="UTF-8">
 		<title>Cesium加载各种地图服务</title>
 		
-		<link rel="stylesheet" href="script/Cesium/Widgets/widgets.css" />
-		<script src="script/Cesium/Cesium.js"></script>
+		<link rel="stylesheet" href="script/Cesium-1.66/Widgets/widgets.css" />
+		<link rel="stylesheet" href="css/bucket.css" />
+		<script src="script/Cesium-1.66/Cesium.js"></script>
+		<script src="script/MoveEntity.js"></script>
+		<script src="script/yanmofenxi.js"></script>
+		<script src="drawhelper/DrawHelper.js"></script>
 		<style>
 			html,body{
 				width:100%;
 				height:100%;
 				margin:0px;
 			}
+
+			.cesium-viewer-bottom               /* logo信息 */
+			{
+				display: none;
+			}
+
+			#slider {
+				position: absolute;
+				left: 50%;
+				top: 0px;
+				background-color: #D3D3D3;
+				width: 5px;
+				height: 100%;
+				z-index: 9999;
+				display:none;
+			}
+
+			#slider:hover {
+				cursor: ew-resize;
+			}
 		</style>
 	</head>
 	<body>
-		<div  id="cesiumContainer" style="width: 100%;height: 100%;background-color: rosybrown;"></div>
+		<div  id="cesiumContainer" style="width: 100%;height: 100%;background-color: rosybrown;">
+			
+			<div style="position:absolute;width:600px;height:80px;top:10px;right:10px;border: 2px solid white;z-index:1000;">
+				<span style="color:white;">工具栏</span>
+				<span style="color:white;">GeoJSON数据下载：https://gallery.echartsjs.com/editor.html?c=xmCAi_XNuJ</span>
+				
+				<button onclick="loadGeoJSON()">加载GeoJSON</button>
+	
+				<button onclick="loadTopoJson()">加载TopoJSON</button>
+				<button onclick="loadGlb()">加载GLB</button>
+				<button onclick="loadCZML()">加载CZML</button>
+				<button onclick="loadSplit()">卷帘</button>
+	
+				<button onclick="addPolygon()">添加多边形</button>
+				<button onclick="addPolyline()">添加polyline</button>
+	
+				<button onclick="moveEntity()">拖拽实体</button>
+				
+				<button onclick="poumianfenxi()">剖面分析</button>
+				<button onclick="poumianfenxi()">透视分析</button>
+				<button onclick="poumianfenxi()">可视域分析</button>
+				<button onclick="poumianfenxi()">雷达分析</button>
+				<button onclick="poumianfenxi()">填挖方分析</button>
+				<button onclick="yanmofenxi()">淹没模拟</button>
+			</div>
+
+			<!--卷帘-->
+			<div id="slider"></div>
+
+			<!--淹没分析组件-->
+			<div id="floodanalyisComp" style="display: none;position:absolute;top:10px;left:10px;border: 2px solid white;z-index:1000;">
+				<button id="floodFx-draw">绘制多边形</button>
+				<button id="floodFx-analyis">开始分析</button>
+			</div>
+
+			<div id="ymfx-toolbar" style="position:absolute;top:10px;left:10px;border: 2px solid white;z-index:1000;"></div>
+
+			<div id="logging" style="position:absolute;bottom:0px;border: 2px solid black;z-index:1000;width:100%;height:30px;background-color:black;opacity:0.5;line-height: 30px;">
+				状态栏
+			</div>
+		</div>
 	</body>
 	<script>
-        //Cesium.Ion.defaultAccessToken = '你的token'
-		 //谷歌服务地址：https://blog.csdn.net/gisuuser/article/details/83089467
-		//http://www.google.cn/maps/vt?lyrs=y@189&gl=cn&x={x}&y={y}&z={z}//卫星图加注记
-		//http://www.google.cn/maps/vt?lyrs=s@800&x={x}&y={y}&z={z}   影像
-		//谷歌影像
-				var guge=new Cesium.UrlTemplateImageryProvider({            	
-					url:'http://www.google.cn/maps/vt?lyrs=y@189&gl=cn&x={x}&y={y}&z={z}',  
-					tilingScheme:new Cesium.WebMercatorTilingScheme(),            	
-					minimumLevel:1,            
-					maximumLevel:20        
-				});  
-				//scene.skyAtmosphere.show false;//大气层
-		//viewer.scene.globe.depthTestAgainstTerrain = true;//控制视角不转到地下
-	   	var viewer = new Cesium.Viewer('cesiumContainer',{
-				animation:false,//左下角控制动画
-				baseLayerPicker:false,//右上角图层选择器
-				fullscreenButton:false,    
-				geocoder:false,//右上角搜索   默认bing地图
-				homeButton:true,      
-				infoBox:false,   
-				scene3DOnly:false,//仅仅显示3d,可隐藏右上角2d和3d按钮  哥伦布视图（CV）
-				sceneModePicker:false,
-				creditContaniner:"credit",
-				vrButton:false,
-				//skyBox:new Cesium.SkyBox(),
-				selectionoIndicatr:false,            
-				timeline:false,//最下面时间轴            
-				navigationHelpButton:false,//右上角帮助按钮 
-				navigationInstructionsInitiallyVisibl:false,            
-				useDefaultRenderLoop:true,            
-				showRenderLoopErrors:true,            
-				projectionPicker:false,//投影选择器    
-				//selectionIndicator:false,//禁止entity选中
-				imageryProvider : guge     
-		});
-		viewer.scene.globe.enableLighting = true;
-		
-		//世界地形图
-		/*
-		var terrain = new Cesium.createWorldTerrain({           
-			requestWaterMask:true,           
-			requestVertexNormals:true    //requestVertexNormals设为true并开启全球光照。   
-		}); 
-		*/
-		//按照程序创建椭球的表面。缺乏地形的真实外观，但不从服务器请求数据
-		//var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();    
-		//viewer.terrainProvider = terrain;//ellipsoidProvider terrain
-
-		//Cesium动态叠加地形图 
-		MapConfig.terrainObj = {url:"//assets.agi.com/stk-terrain/world",requestWaterMask:false,requestVertexNormals:false,proxyUrl:""}; 
-		//MapConfig.terrainObj = {url:"http://localhost:8180/cesium/worldTerrain",requestWaterMask:false,requestVertexNormals:false,proxyUrl:""};  
-		
-		/** 
-			 * 添加地形图图层 
-			 * @method addTerrainLayer 
-			 * @param  url 地形图url proxyUrl 代理请求url 
-			 * @return 
-			 */ 
-		var addTerrainLayer = function (terrainObj) { 
-			if (terrainObj.url && terrainObj.url.replace(/(^s*)|(s*$)/g, "").length >0) { 
-				var provider ={}; 
-				if(terrainObj.proxyUrl && terrainObj.proxyUrl.length>0) 
-					provider = {
-						proxy:new Cesium.DefaultProxy(terrainObj.proxyUrl),
-						url:terrainObj.url,
-						requestWaterMask:terrainObj.requestWaterMask,
-						requestVertexNormals:terrainObj.requestVertexNormals
-					}; 
-				else 
-								provider = {url:terrainObj.url,requestWaterMask:terrainObj.requestWaterMask,requestVertexNormals:terrainObj.requestVertexNormals}; 
-				
-				var terrainProvider = new Cesium.CesiumTerrainProvider(provider); 
-						this.cesiumViewer.terrainProvider = terrainProvider; 
-			} 
-		};
-
-		viewer.scene.debugShowFramesPerSecond = true;
-		//点击home按钮跳转到自定义位置
-		/*viewer.homeButton.viewModel.command.beforeExecute.addEventListener(function(commandInfo){
-			//Fly to custom position
-			viewer.camera.flyToBoundingSphere(boundingSphere);
-			//Tell the home button not to do anything
-			commandInfo.cancel = ture;
-		});*/
-
-		//添加Entity box
-		/*var entity1 = viewer.entities.add({
-			name : "我的实体1",
-			position : Cesium.Cartesian3.fromDegrees(116,27,30000.0),
-			box : {
-				dimensions : Cesium.Cartesian3.fromDegrees(116,27,40000.0),//new Cesium.Cartesian3()
-				material : Cesium.Color.RED.withAlpha(0.5),
-				outline : true,
-				outlineColor : Cesium.Color.BLACK
-			}
-		});
-		viewer.zoomTo(viewer.entities);*/
-
-		//添加CZML实体
-		//var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
-		//viewer.dadtaSources.add(dataSourcePromise);
-		//viewer.zoomTo(dataSourcePromise);
-
-		//添加polyline
-		/*var entity = viewer.entities.add({
-			polyline : {
-				positions : Cesium.Cartesian3.fromDegreesArray([111,28,113,28]),
-				width : 5,
-				//material : Cesium.Color.RED
-				material : new Cesium.PolylineGlowMaterialProperty(
-					{
-						glowPower:0.2,
-						color: Cesium.Color.BLUE
-					}
-				)
-			}
-		});*/
-
-		//添加wall
-		/*
-		var getColorRamp = function(elevationRamp){
-			var ramp = document.createElement('canvas');
-			ramp.width = 1;
-			ramp.height = 100;
-			var ctx = ramp.getContext('2d');
-
-			var values = elevationRamp;
-			var grd = ctx.createLinearGradient(0,0,0,100);
-			grd.addColorStop(values[0],'#000000');//black
-			grd.addColorStop(values[1],'#2747E0');//blue
-			grd.addColorStop(values[2],'#D33B7D');//pink
-			grd.addColorStop(values[3],'#D33038');//red
-			ctx.fillStyle = grd;
-			ctx.fillRect(0,0,1,100);
-			return ramp;
-		};
-
-		var redwall = viewer.entities.add({
-			name : "Red wall at height",
-			wall : {
-				positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-					113.44444,28.2222222,2000.0,
-					113.5555,28.2222222,2000.0,
-					113.66666,28.333333,2000.0,
-					113.777777777,28.333333,2000.0,
-				]),
-				miniumHeights : [3000,2000,2000,3000],
-				material: getColorRamp([0.0,0.045,0.1,0.15],true)
-			}
-		});*/
-
-		//贴地线
-		/*
-		var rectanglePrimitive = viewer.scene.primitives.add(
-			new Cesium.GroundPrimitive({
-				geometryInstances: new Cesium.GeometryInstance({
-					geometry: new Cesium.CorridorGeometry({
-						vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-						positions:Cesium.Cartesian3.fromDegreesArray([
-							108,23,112.82742,23.0675,112.82888,23.0646,112.8307,23.0609,112.8,23.05
-						]),
-						width:40
-					}),
-					attributes:{
-						color:Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0,1.0,0.0,0.5))
-					}
-				}),
-				classificationType : Cesium.ClassificationType.TERRATIN
-			})
-		);*/
-
-		//设置camera roll绕x轴旋转 pitch 绕y轴旋转 heading 绕z轴旋转
-		viewer.camera.setView({
-			destination: Cesium.Cartesian3.fromDegrees(112,28,2000),
-			orientation : {
-				heading : Cesium.Math.toRadians(20.0),//方向
-				pitch:Cesium.Math.toRadians(-90.0),//倾斜角度
-				roll:0
-			}
-		});
-
-		//viewer.zoomTo(viewer.entities);
 	</script>
+	<script src="main.js"></script>
 </html>

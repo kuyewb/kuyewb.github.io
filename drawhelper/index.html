@@ -55,14 +55,11 @@
 <script>
 
     function start() {
-        // create the almighty cesium widget
-        var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', {scene3DOnly: true});
-        var scene = cesiumWidget.scene;
 
         // add terrain elevation 地形
         var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
-            url : 'https://cesiumjs.org/tilesets/terrain/smallterrain',
-            credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+            url : 'https://www.supermapol.com/realspace/services/3D-stk_terrain/rest/realspace/datas/info/data/path',//'https://cesiumjs.org/tilesets/terrain/smallterrain',
+            credit : 'supermap'//'Terrain data courtesy Analytical Graphics, Inc.'
         });
 
         //scene.terrainProvider = cesiumTerrainProviderHeightmaps;
@@ -73,7 +70,27 @@
 					minimumLevel:1,            
 					maximumLevel:20        
 				});  
-        scene.imageryProvider = guge;
+        //scene.imageryProvider = guge;
+
+        // create the almighty cesium widget
+        var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', {
+            scene3DOnly: true,
+            terrainProvider : cesiumTerrainProviderHeightmaps,
+            imageryProvider : guge
+        });
+        var scene = cesiumWidget.scene;
+
+        
+
+        scene.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(113.0, 28.2, 50000),//
+            orientation: {
+                heading: Cesium.Math.toRadians(20.0),//方向
+                pitch: Cesium.Math.toRadians(-90.0),//倾斜角度
+                roll: 0
+            }
+        });
+
         // start the draw helper to enable shape creation and editing
         var drawHelper = new DrawHelper(cesiumWidget);
         var toolbar = drawHelper.addToolbar(document.getElementById("toolbar"), {

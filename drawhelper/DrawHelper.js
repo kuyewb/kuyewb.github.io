@@ -620,19 +620,19 @@ var DrawHelper = (function() {
     })();
 
     var defaultBillboard = {
-        iconUrl: "./img/dragIcon.png",
+        iconUrl: "/drawhelper/img/dragIcon.png",
         shiftX: 0,
         shiftY: 0
     }
 
     var dragBillboard = {
-        iconUrl: "./img/dragIcon.png",
+        iconUrl: "./drawhelper/img/dragIcon.png",
         shiftX: 0,
         shiftY: 0
     }
 
     var dragHalfBillboard = {
-        iconUrl: "./img/dragIconLight.png",
+        iconUrl: "./drawhelper/img/dragIconLight.png",
         shiftX: 0,
         shiftY: 0
     }
@@ -976,7 +976,10 @@ var DrawHelper = (function() {
 
         function updateExtent(value) {
             if(extent == null) {
-                extent = new Cesium.RectanglePrimitive();
+                //extent = new Cesium.RectanglePrimitive();
+                extent = new Cesium.RectanglePrimitive({
+                    rectangle : value
+                });
                 extent.asynchronous = false;
                 primitives.add(extent);
             }
@@ -1641,12 +1644,12 @@ var DrawHelper = (function() {
             }
 
             var drawOptions = {
-                markerIcon: "./img/glyphicons_242_google_maps.png",
-                polylineIcon: "./img/glyphicons_097_vector_path_line.png",
-                polygonIcon: "./img/glyphicons_096_vector_path_polygon.png",
-                circleIcon: "./img/glyphicons_095_vector_path_circle.png",
-                extentIcon: "./img/glyphicons_094_vector_path_square.png",
-                clearIcon: "./img/glyphicons_067_cleaning.png",
+                markerIcon: "/drawhelper/img/glyphicons_242_google_maps.png",
+                polylineIcon: "/drawhelper/img/glyphicons_097_vector_path_line.png",
+                polygonIcon: "/drawhelper/img/glyphicons_096_vector_path_polygon.png",
+                circleIcon: "/drawhelper/img/glyphicons_095_vector_path_circle.png",
+                extentIcon: "/drawhelper/img/glyphicons_094_vector_path_square.png",
+                clearIcon: "/drawhelper/img/glyphicons_067_cleaning.png",
                 polylineDrawingOptions: defaultPolylineOptions,
                 polygonDrawingOptions: defaultPolygonOptions,
                 extentDrawingOptions: defaultExtentOptions,
