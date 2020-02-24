@@ -43,7 +43,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     navigationInstructionsInitiallyVisibl: false,
     useDefaultRenderLoop: true,
     showRenderLoopErrors: true,
-    projectionPicker: false,//投影选择器    
+    projectionPicker: false,//投影选择器
     //selectionIndicator:false,//禁止entity选中
     imageryProvider: guge
 });
