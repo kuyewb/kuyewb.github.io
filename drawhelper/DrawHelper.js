@@ -423,6 +423,7 @@ var DrawHelper = (function() {
         return _;
     })();
 
+    //绘制圆形
     _.CirclePrimitive = (function() {
     	
         function _(options) {
