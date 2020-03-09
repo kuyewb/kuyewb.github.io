@@ -61,3 +61,8 @@ if (viewer.navigationHelpButton) {
  touch_help_rotate.innerHTML = "旋转";
  touch_help_rotate.parentNode.getElementsByClassName("cesium-navigation-help-details")[0].innerHTML = "双指反向拖动";
            }
+
+
+数据：
+
+3D tiles格式，后缀.b3dm

@@ -1,0 +1,92 @@
+<html>
+    <head>
+        <title>Three.js</title>
+        <!--<script src="https://cdn.bootcss.com/three.js/110/three.min.js"></script>-->
+        <script src="threejs/three.js-master/build/three.min.js"></script>
+
+        <!-- OrbitControls.js 相机控件-->
+        <script src="threejs/three.js-master/examples/js/controls/OrbitControls.js"></script>
+        <style>
+            body{
+                margin:0;
+                overflow:hidden;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>Three.js</h1>
+        <a href="study/threejs.html">学习资料</a>
+
+        <script>
+            var scene = new THREE.Scene();
+            //几何体
+            //var geometry = new THREE.SphereGeometry(60,40,40);//球
+            var geometry = new THREE.BoxGeometry(100,100,100);//立方体
+            var geoCylinder = new THREE.CylinderGeometry(50,50,100,25) //圆柱  25 分段数
+            //OctahedronGeometry(50)    DodecahedronGeometry(50)   IcosahedronGeometry(50)   正八、十二、二十面体
+            //材质 MeshBasicMaterial(不受光照影像)   MeshLambertMaterial  漫反射   MeshPhongMaterial 高光反射
+            var material = new THREE.MeshLambertMaterial({
+                color:0x0000ff,
+                transparent:true//,
+                //opacity:0.5
+            });
+            var mesh = new THREE.Mesh(geometry,material);//模型
+            scene.add(mesh);
+
+            var symesh = new THREE.Mesh(geoCylinder,material);//模型
+            symesh.translateY(120);//translateX
+            //symesh.position.set(120,0,0);
+            scene.add(symesh);
+
+            //点光源
+            var point = new THREE.PointLight(0xffffff);
+            point.position.set(400,200,300);
+            scene.add(point);
+            //环境光
+            var ambient = new THREE.AmbientLight(0x444444);
+            scene.add(ambient);
+
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+            var k = width / height;
+            //显示范围控制系数，系数越大，显示范围越大。
+            var s = 200;
+            var camera = new THREE.OrthographicCamera(-s*k,s*k,s,-s,1,1000);
+            camera.position.set(200,300,200);
+            camera.lookAt(scene.position);
+
+            //辅助坐标系
+            var axisHelper = new THREE.AxesHelper(250);//AxisHelper rename to AxesHelper
+            scene.add(axisHelper);
+
+            var renderer = new THREE.WebGLRenderer();
+            renderer.setSize(width,height);
+            renderer.setClearColor(0xb9b3ff,1);//背景颜色
+            document.body.appendChild(renderer.domElement);//body元素中插入canvas对象
+
+            //
+            //renderer.render(scene,camera);
+            let T0 = new Date();
+            function render(){
+                let T1 = new Date();
+                let t = T1 - T0;
+                //console.log(t);
+                T0 = T1;
+                renderer.render(scene,camera);
+                //mesh.rotateY(0.01);
+                //window.requestAnimationFrame()请求浏览器执行下一帧   30-60FPS
+                //requestAnimationFrame(render);//请求再次执行渲染函数render,渲染下一帧
+            }
+            render();
+            //20毫秒
+            //window.setInterval("render()",20);
+
+            //相机控件（鼠标操作）
+            var controls = new THREE.OrbitControls(camera,renderer.domElement);
+            controls.addEventListener('change',render);
+
+            
+        </script>
+    </body>
+</html>

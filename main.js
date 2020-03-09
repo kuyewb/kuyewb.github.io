@@ -204,6 +204,9 @@ var ctTerrainProvider = new Cesium.CesiumTerrainProvider({
 });
 viewer.terrainProvider = ctTerrainProvider;
 
+//初始化自定义 tooltip
+TooltipCesium.initTool(viewer);
+
 /**===========================================鼠标事件====================================== */
 var CesiumEventHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 //得到当前三维场景的椭球体
@@ -246,6 +249,9 @@ CesiumEventHandler.setInputAction(function (movement) {
                 document.getElementById("logging").innerHTML = coorStr;
             }
         );
+
+        //
+        //TooltipCesium.showAt(movement.endPosition, 'MOUSE_MOVE');
     }  
  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
@@ -261,6 +267,22 @@ LonlatPointsTerrainData = function (lonlats, callback) {
        callback(updatedPositions);
     });
  };
+
+ //地图点击事件
+ CesiumEventHandler.setInputAction(function(movement){
+    var pick = viewer.scene.pick(movement.position);
+    if(Cesium.defined(pick) && pick){
+         var str = "";
+         if(pick.id.id && typeof(pick.id.id) == 'string'){
+             str = "entity: " + pick.id.id;
+         }else if(pick.id && typeof(pick.id) == 'string'){
+            str = "primitive: " + pick.id;
+         }else{
+             str = "unknow";
+         }
+        console.log("点击了" + str);
+    }
+ },Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 /**=========================================================================================== */
 
@@ -370,6 +392,20 @@ viewer.camera.setView({
 });
 
 //viewer.zoomTo(viewer.entities);
+/*==========================================================================*/
+function load3DTiles() {
+    var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+        url: '/data/3dtiles-JX/tileset.json'
+    }));
+
+    tileset.readyPromise.then(function () {
+        var boundingSphere = tileset.boundingSphere;
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }).otherwise(function (error) {
+        throw (error);
+    });
+}
 
 /*==========================================================================*/
 function loadGeoJSON() {
@@ -731,7 +767,7 @@ function moveToLine(arr) {
 }
 
 /* ========================================================= */
-
+//卷帘
 function move(movement) {
     if (!moveActive) {
         return;
@@ -743,14 +779,15 @@ function move(movement) {
     viewer.scene.imagerySplitPosition = splitPosition;
 }
 
+//添加Entity
 function addEntity(){
     //entity: box circle ellipse corridor
     //box
     viewer.entities.add({
         name: 'Blue box',
-        position: Cesium.Cartesian3.fromDegrees(111.0, 40.0, 0),
+        position: Cesium.Cartesian3.fromDegrees(115.0, 40.0, 0),
         box: {
-        dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+            dimensions: new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
             material: Cesium.Color.BLUE
         }
     });
@@ -765,19 +802,25 @@ function addEntity(){
             material: Cesium.Color.GREEN
         }
     });
-    //Ellipse
+    //Ellipse 椭圆
     viewer.entities.add({
-        position: Cesium.Cartesian3.fromDegrees(103.0, 40.0),
+        position: Cesium.Cartesian3.fromDegrees(95.0, 25.0),
         name: 'Red ellipse on surface with outline',
         ellipse: {
-        semiMinorAxis: 250000.0,
-        semiMajorAxis: 400000.0,
-            material: Cesium.Color.RED.withAlpha(0.5),
-            outline: true,
-        outlineColor: Cesium.Color.RED
+            semiMinorAxis: 250000.0,
+            semiMajorAxis: 400000.0,
+            height: 200000.0,
+            extrudedHeight: 400000.0,//垂直拉伸
+            //material: Cesium.Color.RED.withAlpha(0.5),
+            material: "data/images/tietu.jpg",
+            fill:true,//默认
+            outline: true,//必须设置height，否则ouline无法显示???
+            outlineWidth:10.0,//不能设置，固定为1
+            //outlineColor: Cesium.Color.RED
+            outlineColor: Cesium.Color.BLUE.withAlpha(0.5)
         }
     });
-    //Corridor
+    //Corridor 走廊
     viewer.entities.add({
         name: 'Red corridor on surface with rounded corners and outline',
         corridor: {
@@ -792,10 +835,10 @@ function addEntity(){
             outlineColor: Cesium.Color.RED
         }
     });
-    //Cylinder
+    //Cylinder 圆柱
     viewer.entities.add({
         name: 'Green cylinder with black outline',
-        position: Cesium.Cartesian3.fromDegrees(100.0, 40.0, 200000.0),
+        position: Cesium.Cartesian3.fromDegrees(95.0, 40.0, 200000.0),
         cylinder: {
             length: 400000.0,
             topRadius: 200000.0,
@@ -805,14 +848,14 @@ function addEntity(){
         outlineColor: Cesium.Color.DARK_GREEN
         }
     });
-    //Cone
+    //Cone 圆锥体
     viewer.entities.add({
         name: 'Red cone',
-        position: Cesium.Cartesian3.fromDegrees(105.0, 40.0, 200000.0),
+        position: Cesium.Cartesian3.fromDegrees(90.0, 40.0, 200000.0),
         cylinder: {
             length: 400000.0,
             topRadius: 0.0,
-        bottomRadius: 200000.0,
+            bottomRadius: 200000.0,
             material: Cesium.Color.RED
         }
     });
@@ -820,11 +863,11 @@ function addEntity(){
     viewer.entities.add({
         name: 'Red polygon on surface',
         polygon: {
-            hierarchy: Cesium.Cartesian3.fromDegreesArray([115.0, 37.0,
-            115.0, 32.0,
-            107.0, 33.0,
-            102.0, 31.0,
-            102.0, 35.0]),
+            hierarchy: Cesium.Cartesian3.fromDegreesArray([115.0, 32.0,
+            115.0, 27.0,
+            107.0, 28.0,
+            102.0, 26.0,
+            102.0, 30.0]),
             material: Cesium.Color.RED
         }
     });
@@ -838,7 +881,7 @@ function addEntity(){
             material: Cesium.Color.RED
         }
     });
-    //polylineVolume
+    //polylineVolume 体
     function computeCircle(radius) {
         var positions = [];
         for (var i = 0; i < 360; i++) {
@@ -847,6 +890,7 @@ function addEntity(){
         }
         return positions;
     }
+    //管
     viewer.entities.add({
         name: 'Red tube with rounded corners',
         polylineVolume: {
@@ -857,7 +901,7 @@ function addEntity(){
             material: Cesium.Color.RED
         }
     });
-        //rectangle
+    //rectangle
     viewer.entities.add({
         name: 'Red translucent rectangle with outline',
         rectangle: {
@@ -867,10 +911,10 @@ function addEntity(){
         outlineColor: Cesium.Color.RED
         }
     });
-        //Sphere
+    //Sphere 球体
     viewer.entities.add({
         name: 'Red sphere with black outline',
-        position: Cesium.Cartesian3.fromDegrees(107.0, 40.0, 300000.0),
+        position: Cesium.Cartesian3.fromDegrees(107.0, 43.0, 300000.0),
         ellipsoid: {
             radii: new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
             material: Cesium.Color.RED.withAlpha(0.5),
@@ -878,29 +922,102 @@ function addEntity(){
         outlineColor: Cesium.Color.BLACK
         }
     });
-        //ellipsoid
+    //ellipsoid 椭圆体
     viewer.entities.add({
         name: 'Blue ellipsoid',
-        position: Cesium.Cartesian3.fromDegrees(114.0, 40.0, 300000.0),
+        position: Cesium.Cartesian3.fromDegrees(119.5, 40.0, 300000.0),
         ellipsoid: {
             radii: new Cesium.Cartesian3(200000.0, 200000.0, 300000.0),
             material: Cesium.Color.BLUE
         }
     });
-        //wall
+    //wall 围墙
     viewer.entities.add({
         name: 'Green wall from surface with outline',
         wall: {
             positions: Cesium.Cartesian3.fromDegreesArrayHeights([107.0, 43.0, 100000.0,
             97.0, 43.0, 100000.0,
-            97.0, 40.0, 100000.0,
-            107.0, 40.0, 100000.0,
+            97.0, 41.0, 100000.0,
+            107.0, 41.0, 100000.0,
             107.0, 43.0, 100000.0]),
             material: Cesium.Color.GREEN
         }
     });
     
     viewer.zoomTo(viewer.entities);
+}
+
+/**======================================================================================= */
+//添加primitive
+function addPrimitive(){
+    //类型：Box BoxOutline Circle CircleOutline Corridor走廊 CorridorOutline Cylinder圆柱、圆锥 Ellipse Ellipsoid Rectangle 
+    //Polygon Polyline  SimplePolyline PolylineVolume 多段线柱体 Sphere 球体 Wall
+
+    //entity与primitive方式对比：合并多个GeometryInstances 为一个Primitive可以极大的提高性能 当添加对象超过1w时entity方式直接导致浏览器崩溃。
+    //entity方式
+    /*
+    viewer.entities.add({
+          rectangle: {
+             coordinates: Cesium.Rectangle.fromDegrees(110.20, 34.55, 111.20, 35.55),
+              material: new Cesium.StripeMaterialProperty({
+                 evenColor: Cesium.Color.WHITE,
+                 oddColor: Cesium.Color.BLUE,
+                 repeat:5
+              })
+          }
+    });*/
+
+    //primitive方式
+    /*
+    var instance = new Cesium.GeometryInstance({
+        geometry: new Cesium.RectangleGeometry({
+              rectangle: Cesium.Rectangle.fromDegrees(105.20, 30.55, 106.20, 31.55),
+             vertexFormat:Cesium.EllipsoidSurfaceAppearance.VERTEXT_FORMAT
+          })
+    });
+    viewer.scene.primitives.add(new Cesium.Primitive({
+          geometryInstances: instance,
+          appearance: new Cesium.EllipsoidSurfaceAppearance({
+             material:Cesium.Material.fromType('Stripe')
+          })
+    }));
+    //可以使用PerInstanceColorAppearance为每个实例赋不同颜色
+    //vertexFormat: Cesium.PerInstanceColorAppearance.VERTEXT_FORMAT    顶点格式
+    //appearance: new Cesium.PerInstanceColorAppearance
+    */
+
+    var instances = [];
+    for (var lon = -180.0; lon < 180.0; lon += 5.0) {
+        for (var lat = -90.0; lat < 90.0; lat += 5.0) {
+            instances.push(new Cesium.GeometryInstance({
+                geometry: new Cesium.RectangleGeometry({
+                    rectangle: Cesium.Rectangle.fromDegrees(lon, lat, lon + 5.0, lat +5.0)
+                }),
+                id : 'test',
+                attributes: {
+                    color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({
+                        alpha: 0.5
+                    }))
+                }
+            }));
+          }
+    }
+    viewer.scene.primitives.add(new Cesium.Primitive({
+          geometryInstances: instances, //合并
+          //某些外观允许每个几何图形实例分别指定某个属性，例如：
+          appearance: new Cesium.PerInstanceColorAppearance()
+    }));
+
+    //修改
+    //获取某个实例的属性集
+    /*
+    var attributes = primitive.getGeometryInstanceAttributes('circle');
+    attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(
+        Cesium.Color.fromRandom({
+            alpha: 1.0
+        }));
+    raiseToTop
+    */
 }
 
 function addPolygon() {

@@ -1,0 +1,17 @@
+Three.js的相机控件OrbitControls.js可以对Threejs的三维场景进行缩放、平移、旋转操作，本质上改变的并不是场景，而是相机的参数
+
+鼠标操作：通过拖动鼠标左键可以720旋转展示三维场景，通过拖动鼠标右键可以平移三维场景，通过上下滚动鼠标中键可以缩放三维场景。
+var controls =newTHREE.OrbitControls(camera);
+controls.enablePan =false;//禁止右键拖拽
+controls.enableZoom =false;//禁止缩放
+controls.enableRotate =false;//禁止旋转
+controls.minZoom =0.5;controls.maxZoom =2;// 缩放范围
+// 上下旋转范围
+controls.minPolarAngle =0;controls.maxPolarAngle =Math.PI;
+// 左右旋转范围
+controls.minAzimuthAngle = -Math.PI * (100/180);
+controls.maxAzimuthAngle =Math.PI * (100/180);
+
+
+Geometry
+buffer（）
