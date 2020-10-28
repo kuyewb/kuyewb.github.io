@@ -9,7 +9,7 @@ var providerViewModels = [];
 //&gl=cn 火星偏移
 //谷歌影像
 var guge = new Cesium.UrlTemplateImageryProvider({
-    url: 'http://www.google.cn/maps/vt?lyrs=y@189&gl=cn&x={x}&y={y}&z={z}',
+    url: 'http://mt3.google.cn/maps/vt?lyrs=y@189&gl=cn&x={x}&y={y}&z={z}',
     tilingScheme: new Cesium.WebMercatorTilingScheme(),
     minimumLevel: 1,
     maximumLevel: 20
@@ -397,6 +397,27 @@ function load3DTiles() {
     var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url: '/data/3dtiles-JX/tileset.json'
     }));
+
+    tileset.readyPromise.then(function () {
+        var boundingSphere = tileset.boundingSphere;
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }).otherwise(function (error) {
+        throw (error);
+    });
+}
+
+function load3DTiles2() {
+    var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+        //url: '/data/3DTiles/tileset.json'
+        url : 'http://localhost:8081/tileset.json'
+    }));
+    //创建平移矩阵方法二
+    var translation=Cesium.Cartesian3.fromArray([-550, 50, -300]);
+    var m = Cesium.Matrix4.fromTranslation(translation);
+
+    //生效
+    tileset._modelMatrix = m;
 
     tileset.readyPromise.then(function () {
         var boundingSphere = tileset.boundingSphere;
